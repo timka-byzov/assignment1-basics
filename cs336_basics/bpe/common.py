@@ -1,7 +1,7 @@
 type ByteWord = tuple[bytes, ...]
 type BytePair = tuple[bytes, bytes]
-type FreqTable = dict[ByteWord, int]
-type ByteDictionary = dict[int, bytes]
+type FreqTable = dict[BytePair, int]
+type ByteVocab = dict[int, bytes]
 
 UTF_8_BYTES = 256
 
