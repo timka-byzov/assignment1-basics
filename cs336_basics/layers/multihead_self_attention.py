@@ -20,7 +20,9 @@ class StanfordMHSA(torch.nn.Module):
         self.num_heads = mhsa.num_heads
 
         if mhsa.rope_config:
-            self.rope = StanfordRoPE(mhsa.rope_config, llm.max_seq_len)
+            self.rope = StanfordRoPE(
+                mhsa.rope_config.theta, llm.d_model // mhsa.num_heads, llm.max_seq_len
+            )
         else:
             self.rope = None
 

@@ -230,7 +230,7 @@ def run_multihead_self_attention_with_rope(
     mhsa = StanfordMHSA(
         MHSAConfig(
             num_heads=num_heads,
-            rope_config=RoPEConfig(theta=theta, d_k=d_model // num_heads),
+            rope_config=RoPEConfig(theta=theta),
         ),
         LLModelConfig(d_model=d_model, max_seq_len=max_seq_len),
     )
@@ -268,7 +268,7 @@ def run_rope(
     """
     from cs336_basics.layers.rope import StanfordRoPE
 
-    rope = StanfordRoPE(RoPEConfig(theta=theta, d_k=d_k), max_seq_len)
+    rope = StanfordRoPE(theta, d_k, max_seq_len)
     return rope.forward(in_query_or_key, token_positions)
 
 
@@ -349,7 +349,7 @@ def run_transformer_block(
         config=TransformerBlockConfig(
             mhsa=MHSAConfig(
                 num_heads=num_heads,
-                rope_config=RoPEConfig(theta=theta, d_k=d_model // num_heads),
+                rope_config=RoPEConfig(theta=theta),
             ),
             rms=RMSConfig(),
             glu=GLUConfig(d_ff=d_ff),

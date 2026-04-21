@@ -8,7 +8,6 @@ class LLModelConfig(BaseModel):
 
 class RoPEConfig(BaseModel):
     theta: float
-    d_k: int
 
 
 class MHSAConfig(BaseModel):
