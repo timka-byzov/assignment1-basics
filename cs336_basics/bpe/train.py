@@ -1,31 +1,47 @@
 from collections import defaultdict
+from dataclasses import dataclass
 from cs336_basics.bpe.common import (
-    FreqTable,
+    FrequencyTable,
     UTF_8_BYTES,
     ByteVocab,
     BytePair,
     ByteWord,
+    reverse_bytes,
 )
+import heapq
 
 
-class MostFreqPair:
+@dataclass(order=True)
+class FrequencyHeapItem:
+    count: int
+    pair: BytePair
+
+
+class FrequencyHeap:
     def __init__(self) -> None:
-        self.value: BytePair | None = None
-        self.count = 0
+        self.heap: list[FrequencyHeapItem] = []
+        heapq.heapify(self.heap)
 
-    def try_update(self, new_pair: BytePair, new_count: int) -> bool:
+    def push(self, item: FrequencyHeapItem) -> None:
+        reverse_count = -item.count
+        reverse_bytes_0 = reverse_bytes(item.pair[0])
+        reverse_bytes_1 = reverse_bytes(item.pair[1])
 
-        if (
-            self.value is None
-            or new_count > self.count
-            or new_count == self.count
-            and new_pair > self.value  # compare tuples of bytes
-        ):
-            self.value = new_pair
-            self.count = new_count
-            return True
+        heapq.heappush(
+            self.heap,
+            FrequencyHeapItem(reverse_count, (reverse_bytes_0, reverse_bytes_1)),
+        )
 
-        return False
+    def pop(self) -> FrequencyHeapItem:
+        item = heapq.heappop(self.heap)
+        count = -item.count
+        bytes_0 = reverse_bytes(item.pair[0])
+        bytes_1 = reverse_bytes(item.pair[1])
+
+        return FrequencyHeapItem(count, (bytes_0, bytes_1))
+
+    def empty(self) -> bool:
+        return len(self.heap) == 0
 
 
 class TokenNode:
@@ -46,7 +62,12 @@ class TrainWord:
 
             prev_node = new_node
 
-    def merge(self, most_freq_pair: BytePair, frequencis: FreqTable) -> None:
+    def merge(
+        self,
+        most_freq_pair: BytePair,
+        frequencis: FrequencyTable,
+        freq_heap: FrequencyHeap,
+    ) -> None:
         curr_node = self.head
 
         while curr_node:
@@ -68,14 +89,21 @@ class TrainWord:
                     if curr_node.prev:
                         new_node.prev = curr_node.prev
                         curr_node.prev.next = new_node
-                        frequencis[(new_node.prev.token, new_node.token)] += 1
+
+                        key = (new_node.prev.token, new_node.token)
+                        frequencis[key] += 1
+                        freq_heap.push(FrequencyHeapItem(frequencis[key], key))
+
                     else:
                         self.head = new_node
 
                     if next_node.next:
                         new_node.next = next_node.next
                         next_node.next.prev = new_node
-                        frequencis[(new_node.token, new_node.next.token)] += 1
+
+                        key = (new_node.token, new_node.next.token)
+                        frequencis[key] += 1
+                        freq_heap.push(FrequencyHeapItem(frequencis[key], key))
 
                     next_node = next_node.next
 
@@ -93,33 +121,43 @@ def _build_initial_dict(spec_tokens: list[bytes]) -> ByteVocab:
 
 def _build_init_frequencis(
     pretokenized_text: list[ByteWord],
-) -> tuple[FreqTable, MostFreqPair]:
-    most_freq_pair = MostFreqPair()
+) -> tuple[FrequencyTable, FrequencyHeap]:
     frequencis = defaultdict(int)
     for word_tokens in pretokenized_text:
         for i in range(len(word_tokens) - 1):
             curr_pair = word_tokens[i], word_tokens[i + 1]
 
             frequencis[curr_pair] += 1
-            most_freq_pair.try_update(curr_pair, frequencis[curr_pair])
 
-    return frequencis, most_freq_pair
+    freq_heap = FrequencyHeap()
+    for pair, freq in frequencis.items():
+        freq_heap.push(FrequencyHeapItem(freq, pair))
+    return frequencis, freq_heap
 
 
 def _merge_iteration(
-    frequencis: FreqTable, most_freq_pair: BytePair, text: list[TrainWord]
-) -> MostFreqPair:
+    frequencis: FrequencyTable,
+    freq_heap: FrequencyHeap,
+    most_freq_pair: BytePair,
+    text: list[TrainWord],
+) -> BytePair | None:
 
     del frequencis[most_freq_pair]
-    new_most_freq_pair = MostFreqPair()
 
     for word in text:
-        word.merge(most_freq_pair, frequencis)
+        word.merge(most_freq_pair, frequencis, freq_heap)
 
-    for pair, freq in frequencis.items():
-        new_most_freq_pair.try_update(pair, freq)
+    if freq_heap.empty():
+        return None
 
-    return new_most_freq_pair
+    item = freq_heap.pop()
+    while (
+        item.pair not in frequencis or item.count != frequencis[item.pair]
+    ) and not freq_heap.empty():
+        item = freq_heap.pop()
+
+    if item.pair in frequencis and item.count == frequencis[item.pair]:
+        return item.pair
 
 
 def train(
@@ -135,16 +173,17 @@ def train(
 
     byte_vocab = _build_initial_dict(spec_tokens)
 
-    frequencis, most_freq_pair = _build_init_frequencis(pretokenized_text)
+    frequencis, freq_heap = _build_init_frequencis(pretokenized_text)
+    most_freq_pair = freq_heap.pop().pair if not freq_heap.empty() else None
     merges: list[BytePair] = []
 
-    while len(byte_vocab) < vocab_size and most_freq_pair.value:  # TODO: or smth else
+    while len(byte_vocab) < vocab_size and most_freq_pair:  # TODO: or smth else
 
-        merges.append(most_freq_pair.value)
-        byte_vocab[len(byte_vocab)] = most_freq_pair.value[0] + most_freq_pair.value[1]
+        merges.append(most_freq_pair)
+        byte_vocab[len(byte_vocab)] = most_freq_pair[0] + most_freq_pair[1]
 
         new_most_freq_pair = _merge_iteration(
-            frequencis, most_freq_pair.value, train_text
+            frequencis, freq_heap, most_freq_pair, train_text
         )
         most_freq_pair = new_most_freq_pair
 

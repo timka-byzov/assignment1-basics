@@ -29,7 +29,12 @@ def run_linear(
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
 
-    raise NotImplementedError
+    from cs336_basics.layers.linear import StanofordLinear
+
+    linear = StanofordLinear(d_in, d_out, "cpu")
+    linear.load_state_dict({"W": weights})
+
+    return linear.forward(in_features)
 
 
 def run_embedding(
@@ -51,7 +56,13 @@ def run_embedding(
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
 
-    raise NotImplementedError
+    from cs336_basics.layers.embedding import StanfordEmbedding
+
+    embedding = StanfordEmbedding(vocab_size, d_model)
+
+    embedding.load_state_dict({"E": weights})
+
+    return embedding.forward(token_ids)
 
 
 def run_swiglu(
@@ -83,7 +94,14 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+
+    from cs336_basics.layers.positionwise_feedforward import StanfordSwiGLU
+
+    swiglu = StanfordSwiGLU(d_model, d_ff)
+
+    swiglu.load_state_dict({"W1": w1_weight, "W2": w2_weight, "W3": w3_weight})
+
+    return swiglu.forward(in_features)
 
 
 def run_scaled_dot_product_attention(
@@ -200,7 +218,10 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    from cs336_basics.layers.rope import StanfordRoPE
+
+    rope = StanfordRoPE(theta, d_k, max_seq_len)
+    return rope.forward(in_query_or_key, token_positions)
 
 
 def run_transformer_block(
@@ -378,7 +399,12 @@ def run_rmsnorm(
         Float[Tensor,"... d_model"]: Tensor of with the same shape as `in_features` with the output of running
         RMSNorm of the `in_features`.
     """
-    raise NotImplementedError
+
+    from cs336_basics.layers.rmsnorm import StanfordRMSNorm
+
+    norm = StanfordRMSNorm(d_model, eps)
+    norm.load_state_dict({"g": weights})
+    return norm.forward(in_features)
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
@@ -452,7 +478,9 @@ def run_cross_entropy(
     raise NotImplementedError
 
 
-def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float) -> None:
+def run_gradient_clipping(
+    parameters: Iterable[torch.nn.Parameter], max_l2_norm: float
+) -> None:
     """Given a set of parameters, clip their combined gradients to have l2 norm at most max_l2_norm.
 
     Args:
@@ -589,7 +617,7 @@ def run_train_bpe(
                 representing that <token1> was merged with <token2>.
                 Merges are ordered by order of creation.
     """
-    
+
     from cs336_basics.bpe.main import BPE
 
     bpe = BPE()
