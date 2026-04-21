@@ -9,6 +9,15 @@ import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
+from cs336_basics.models import (
+    GLUConfig,
+    LLModelConfig,
+    MHSAConfig,
+    RMSConfig,
+    RoPEConfig,
+    TransformerBlockConfig,
+)
+
 
 def run_linear(
     d_in: int,
@@ -160,7 +169,10 @@ def run_multihead_self_attention(
     """
     from cs336_basics.layers.multihead_self_attention import StanfordMHSA
 
-    mhsa = StanfordMHSA(d_model, num_heads, in_features.shape[-1])
+    mhsa = StanfordMHSA(
+        MHSAConfig(num_heads=num_heads),
+        LLModelConfig(d_model=d_model, max_seq_len=in_features.shape[-2]),
+    )
 
     mhsa.load_state_dict(
         {
@@ -215,8 +227,13 @@ def run_multihead_self_attention_with_rope(
     from cs336_basics.layers.multihead_self_attention import StanfordMHSA
     from cs336_basics.layers.rope import StanfordRoPE
 
-    rope = StanfordRoPE(theta, d_model // num_heads, max_seq_len)
-    mhsa = StanfordMHSA(d_model, num_heads, max_seq_len, rope)
+    mhsa = StanfordMHSA(
+        MHSAConfig(
+            num_heads=num_heads,
+            rope_config=RoPEConfig(theta=theta, d_k=d_model // num_heads),
+        ),
+        LLModelConfig(d_model=d_model, max_seq_len=max_seq_len),
+    )
 
     mhsa.load_state_dict(
         {
@@ -251,7 +268,7 @@ def run_rope(
     """
     from cs336_basics.layers.rope import StanfordRoPE
 
-    rope = StanfordRoPE(theta, d_k, max_seq_len)
+    rope = StanfordRoPE(RoPEConfig(theta=theta, d_k=d_k), max_seq_len)
     return rope.forward(in_query_or_key, token_positions)
 
 
@@ -325,7 +342,37 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    raise NotImplementedError
+
+    from cs336_basics.layers.transformer_block import TransformerBlock
+
+    transformer_block = TransformerBlock(
+        config=TransformerBlockConfig(
+            mhsa=MHSAConfig(
+                num_heads=num_heads,
+                rope_config=RoPEConfig(theta=theta, d_k=d_model // num_heads),
+            ),
+            rms=RMSConfig(),
+            glu=GLUConfig(d_ff=d_ff),
+        ),
+        llm=LLModelConfig(d_model=d_model, max_seq_len=max_seq_len),
+    )
+
+    transformer_block.load_state_dict(
+        {
+            "rmsnorm_1.g": weights["ln1.weight"],
+            "rmsnorm_2.g": weights["ln2.weight"],
+            "mhsa.W_q": weights["attn.q_proj.weight"],
+            "mhsa.W_k": weights["attn.k_proj.weight"],
+            "mhsa.W_v": weights["attn.v_proj.weight"],
+            "mhsa.W_out": weights["attn.output_proj.weight"],
+            "swiglu.W1": weights["ffn.w1.weight"],
+            "swiglu.W2": weights["ffn.w2.weight"],
+            "swiglu.W3": weights["ffn.w3.weight"],
+        },
+        strict=False,
+    )
+
+    return transformer_block.forward(in_features)
 
 
 def run_transformer_lm(
@@ -433,7 +480,7 @@ def run_rmsnorm(
 
     from cs336_basics.layers.rmsnorm import StanfordRMSNorm
 
-    norm = StanfordRMSNorm(d_model, eps)
+    norm = StanfordRMSNorm(eps, d_model)
     norm.load_state_dict({"g": weights})
     return norm.forward(in_features)
 

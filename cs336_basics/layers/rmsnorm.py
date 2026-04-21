@@ -1,8 +1,10 @@
 import torch
 
+from cs336_basics.models import LLModelConfig
+
 
 class StanfordRMSNorm(torch.nn.Module):
-    def __init__(self, d_model: int, eps: float = 1e-5, device=None, dtype=None):
+    def __init__(self, eps: float, d_model: int, device=None, dtype=None):
         super().__init__()
         self.eps = eps
         self.d_model = d_model

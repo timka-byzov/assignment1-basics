@@ -3,49 +3,46 @@ from jaxtyping import Float
 from typing import cast
 
 from cs336_basics.layers.rope import StanfordRoPE
-from cs336_basics.layers.softmax import StanfordSoftMax
+from cs336_basics.models import LLModelConfig, MHSAConfig
 from cs336_basics.utils import create_linear_W
 from cs336_basics.layers.scaled_dot_product_attention import StanfordSDPA
 
 
 class StanfordMHSA(torch.nn.Module):
-    def __init__(
-        self,
-        d_model: int,
-        num_heads: int,
-        max_seq_len: int,
-        rope: StanfordRoPE | None = None,
-        causal: bool = True,
-    ):
+    def __init__(self, mhsa: MHSAConfig, llm: LLModelConfig):
         super().__init__()
 
-        assert d_model % num_heads == 0
+        assert llm.d_model % mhsa.num_heads == 0
 
-        self.d_model = d_model
-        self.num_heads = num_heads
-        self.d_k = d_model // num_heads
-        self.causal = causal
-        self.rope = rope
+        self.causal = mhsa.causal
+        self.d_model = llm.d_model
+        self.d_k = llm.d_model // mhsa.num_heads
+        self.num_heads = mhsa.num_heads
+
+        if mhsa.rope_config:
+            self.rope = StanfordRoPE(mhsa.rope_config, llm.max_seq_len)
+        else:
+            self.rope = None
 
         self.sdpa = StanfordSDPA()
 
         self.W_out: Float[torch.Tensor, "d_model d_model"] = torch.nn.Parameter(
-            create_linear_W(d_model, d_model)
+            create_linear_W(llm.d_model, llm.d_model)
         )
         self.W_q: Float[torch.Tensor, "d_model d_model"] = torch.nn.Parameter(
-            create_linear_W(d_model, d_model)
+            create_linear_W(llm.d_model, llm.d_model)
         )
         self.W_k: Float[torch.Tensor, "d_model d_model"] = torch.nn.Parameter(
-            create_linear_W(d_model, d_model)
+            create_linear_W(llm.d_model, llm.d_model)
         )
         self.W_v: Float[torch.Tensor, "d_model d_model"] = torch.nn.Parameter(
-            create_linear_W(d_model, d_model)
+            create_linear_W(llm.d_model, llm.d_model)
         )
 
-        mask = torch.ones(max_seq_len, max_seq_len, dtype=torch.bool)
-        if causal:
+        mask = torch.ones(llm.max_seq_len, llm.max_seq_len, dtype=torch.bool)
+        if mhsa.causal:
             mask = torch.tril(mask)
-        mask = mask.view(1, 1, max_seq_len, max_seq_len)
+        mask = mask.view(1, 1, llm.max_seq_len, llm.max_seq_len)
         self.register_buffer("mask", mask, persistent=False)
 
     def forward(

@@ -4,15 +4,17 @@ import torch
 from jaxtyping import Float, Int
 from typing import cast
 
+from cs336_basics.models import RoPEConfig
+
 
 class StanfordRoPE(torch.nn.Module):
-    def __init__(self, theta: float, d_k: int, max_seq_len: int, device=None):
+    def __init__(self, config: RoPEConfig, max_seq_len: int, device=None):
         super().__init__()
 
-        assert d_k % 2 == 0
+        assert config.d_k % 2 == 0
 
-        self.Theta = theta
-        self.d_k = d_k  # dimension of query and key vectors
+        self.Theta = config.theta
+        self.d_k = config.d_k  # dimension of query and key vectors
         self.max_seq_len = max_seq_len
         self.device = device or torch.device("cpu")
 
