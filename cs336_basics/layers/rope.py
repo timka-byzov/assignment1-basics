@@ -58,5 +58,5 @@ class StanfordRoPE(torch.nn.Module):
                 torch.arange(1, self.d_k, 2, dtype=torch.long),
                 torch.arange(0, self.d_k, 2, dtype=torch.long),
             ),
-        ).T.flatten()  # (d_k,) меняем попарно активации местами
+        ).transpose(-1, -2).flatten()  # (d_k,) меняем попарно активации местами
         self.register_buffer("x_permute", x_permute, persistent=False)

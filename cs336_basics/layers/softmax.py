@@ -5,7 +5,7 @@ class StanfordSoftMax(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, x: torch.Tensor, dim: int):
+    def forward(self, x: torch.Tensor, dim: int = -1):
         dim_max = x.max(dim=dim, keepdim=True).values
         safe_x = x - dim_max
 
