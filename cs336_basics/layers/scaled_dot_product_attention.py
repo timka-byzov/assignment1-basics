@@ -3,9 +3,11 @@ from jaxtyping import Float, Bool
 from cs336_basics.layers.softmax import StanfordSoftMax
 
 
-class StanfordAttention(torch.nn.Module):
+class StanfordSDPA(torch.nn.Module):
     def __init__(self):
         super().__init__()
+
+        self.softmax = StanfordSoftMax()
 
     def forward(
         self,
@@ -24,6 +26,6 @@ class StanfordAttention(torch.nn.Module):
             add_mask = torch.zeros(Q.shape[-2], K.shape[-2], device=Q.device)
 
         w = (Q @ K.transpose(-1, -2)) / d_k.sqrt()  # seq_len, seq_len
-        masked_w = StanfordSoftMax()(add_mask + w)
+        masked_w = self.softmax(add_mask + w)
 
         return masked_w @ V

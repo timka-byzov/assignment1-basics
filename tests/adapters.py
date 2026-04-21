@@ -122,9 +122,9 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    from cs336_basics.layers.scaled_dot_product_attention import StanfordAttention
+    from cs336_basics.layers.scaled_dot_product_attention import StanfordSDPA
 
-    return StanfordAttention().forward(Q, K, V, mask)
+    return StanfordSDPA().forward(Q, K, V, mask)
 
 
 def run_multihead_self_attention(
@@ -158,7 +158,20 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_model"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    from cs336_basics.layers.multihead_self_attention import StanfordMHSA
+
+    mhsa = StanfordMHSA(d_model, num_heads, in_features.shape[-1])
+
+    mhsa.load_state_dict(
+        {
+            "W_q": q_proj_weight,
+            "W_k": k_proj_weight,
+            "W_v": v_proj_weight,
+            "W_out": o_proj_weight,
+        }
+    )
+
+    return mhsa.forward(in_features)
 
 
 def run_multihead_self_attention_with_rope(
@@ -198,7 +211,23 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_model"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+
+    from cs336_basics.layers.multihead_self_attention import StanfordMHSA
+    from cs336_basics.layers.rope import StanfordRoPE
+
+    rope = StanfordRoPE(theta, d_model // num_heads, max_seq_len)
+    mhsa = StanfordMHSA(d_model, num_heads, max_seq_len, rope)
+
+    mhsa.load_state_dict(
+        {
+            "W_q": q_proj_weight,
+            "W_k": k_proj_weight,
+            "W_v": v_proj_weight,
+            "W_out": o_proj_weight,
+        }
+    )
+
+    return mhsa.forward(in_features)
 
 
 def run_rope(

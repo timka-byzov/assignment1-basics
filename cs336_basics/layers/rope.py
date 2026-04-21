@@ -53,10 +53,14 @@ class StanfordRoPE(torch.nn.Module):
         sgn = (torch.arange(self.d_k, dtype=torch.long) % 2) * 2 - 1  # (d_k,)
         self.register_buffer("sgn", sgn, persistent=False)
 
-        x_permute = torch.stack(
-            (
-                torch.arange(1, self.d_k, 2, dtype=torch.long),
-                torch.arange(0, self.d_k, 2, dtype=torch.long),
-            ),
-        ).transpose(-1, -2).flatten()  # (d_k,) меняем попарно активации местами
+        x_permute = (
+            torch.stack(
+                (
+                    torch.arange(1, self.d_k, 2, dtype=torch.long),
+                    torch.arange(0, self.d_k, 2, dtype=torch.long),
+                ),
+            )
+            .transpose(-1, -2)
+            .flatten()
+        )  # (d_k,) меняем попарно активации местами
         self.register_buffer("x_permute", x_permute, persistent=False)

@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from cs336_basics.utils import create_linear_W
 
 
 class StanofordLinear(torch.nn.Module):
@@ -9,10 +10,7 @@ class StanofordLinear(torch.nn.Module):
 
         self.device = device or torch.device("cpu")
 
-        std = np.sqrt(2 / (out_features + in_features))
-        data = torch.zeros((out_features, in_features), device=self.device)
-        torch.nn.init.trunc_normal_(data, mean=0, std=std, a=-3 * std, b=3 * std)
-        self.W = torch.nn.Parameter(data)
+        self.W = torch.nn.Parameter(create_linear_W(in_features, out_features, device))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x @ self.W.T
