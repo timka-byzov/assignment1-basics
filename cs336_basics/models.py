@@ -3,7 +3,9 @@ from pydantic import BaseModel
 
 class LLModelConfig(BaseModel):
     d_model: int
-    max_seq_len: int
+    context_length: int
+    num_layers: int
+    vocab_size: int
 
 
 class RoPEConfig(BaseModel):

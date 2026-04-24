@@ -8,13 +8,13 @@ from cs336_basics.layers.rmsnorm import StanfordRMSNorm
 
 
 class TransformerBlock(torch.nn.Module):
-    def __init__(self, config: TransformerBlockConfig, llm: LLModelConfig):
+    def __init__(self, config: TransformerBlockConfig, d_model, max_seq_len):
         super().__init__()
 
-        self.rmsnorm_1 = StanfordRMSNorm(config.rms.eps, llm.d_model)
-        self.mhsa = StanfordMHSA(config.mhsa, llm)
-        self.rmsnorm_2 = StanfordRMSNorm(config.rms.eps, llm.d_model)
-        self.swiglu = StanfordSwiGLU(llm.d_model, config.glu.d_ff)
+        self.rmsnorm_1 = StanfordRMSNorm(config.rms.eps, d_model)
+        self.mhsa = StanfordMHSA(config.mhsa, d_model, max_seq_len)
+        self.rmsnorm_2 = StanfordRMSNorm(config.rms.eps, d_model)
+        self.swiglu = StanfordSwiGLU(d_model, config.glu.d_ff)
 
     def forward(
         self, x: Float[torch.Tensor, "... seq_len d_model"]

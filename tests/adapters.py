@@ -171,7 +171,8 @@ def run_multihead_self_attention(
 
     mhsa = StanfordMHSA(
         MHSAConfig(num_heads=num_heads),
-        LLModelConfig(d_model=d_model, max_seq_len=in_features.shape[-2]),
+        d_model=d_model,
+        max_seq_len=in_features.shape[-2],
     )
 
     mhsa.load_state_dict(
@@ -232,7 +233,8 @@ def run_multihead_self_attention_with_rope(
             num_heads=num_heads,
             rope_config=RoPEConfig(theta=theta),
         ),
-        LLModelConfig(d_model=d_model, max_seq_len=max_seq_len),
+        d_model=d_model,
+        max_seq_len=max_seq_len,
     )
 
     mhsa.load_state_dict(
@@ -354,7 +356,8 @@ def run_transformer_block(
             rms=RMSConfig(),
             glu=GLUConfig(d_ff=d_ff),
         ),
-        llm=LLModelConfig(d_model=d_model, max_seq_len=max_seq_len),
+        d_model=d_model,
+        max_seq_len=max_seq_len,
     )
 
     transformer_block.load_state_dict(
@@ -454,7 +457,47 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+
+    from cs336_basics.layers.lm import StanfordLM
+
+    transformer_block_config = TransformerBlockConfig(
+        mhsa=MHSAConfig(
+            num_heads=num_heads,
+            rope_config=RoPEConfig(theta=rope_theta),
+        ),
+        rms=RMSConfig(),
+        glu=GLUConfig(d_ff=d_ff),
+    )
+
+    llm_config = LLModelConfig(
+        d_model=d_model,
+        context_length=context_length,
+        num_layers=num_layers,
+        vocab_size=vocab_size,
+    )
+
+    lm = StanfordLM(transformer_block_config, llm_config)
+
+    state_dict: dict[str, Tensor] = {
+        "embedding.E": weights["token_embeddings.weight"],
+        "ln_final.g": weights["ln_final.weight"],
+        "lm_head.W": weights["lm_head.weight"],
+    }
+    for i in range(num_layers):
+        p = f"layers.{i}."
+        state_dict[f"layers.{i}.rmsnorm_1.g"] = weights[p + "ln1.weight"]
+        state_dict[f"layers.{i}.rmsnorm_2.g"] = weights[p + "ln2.weight"]
+        state_dict[f"layers.{i}.mhsa.W_q"] = weights[p + "attn.q_proj.weight"]
+        state_dict[f"layers.{i}.mhsa.W_k"] = weights[p + "attn.k_proj.weight"]
+        state_dict[f"layers.{i}.mhsa.W_v"] = weights[p + "attn.v_proj.weight"]
+        state_dict[f"layers.{i}.mhsa.W_out"] = weights[p + "attn.output_proj.weight"]
+        state_dict[f"layers.{i}.swiglu.W1"] = weights[p + "ffn.w1.weight"]
+        state_dict[f"layers.{i}.swiglu.W2"] = weights[p + "ffn.w2.weight"]
+        state_dict[f"layers.{i}.swiglu.W3"] = weights[p + "ffn.w3.weight"]
+
+    lm.load_state_dict(state_dict, strict=False)
+
+    return lm.forward(in_indices)
 
 
 def run_rmsnorm(
