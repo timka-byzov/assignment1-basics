@@ -598,7 +598,9 @@ def run_cross_entropy(
     Returns:
         Float[Tensor, ""]: The average cross-entropy loss across examples.
     """
-    raise NotImplementedError
+    from cs336_basics.loss.cross_entropy import CrossEntropyLoss
+
+    return CrossEntropyLoss().forward(inputs, targets)
 
 
 def run_gradient_clipping(
