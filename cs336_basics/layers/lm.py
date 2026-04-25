@@ -2,7 +2,7 @@ import torch
 from jaxtyping import Int, Float
 
 from cs336_basics.layers.linear import StanofordLinear
-from cs336_basics.models import LLModelConfig, TransformerBlockConfig
+from cs336_basics.config.models import LLModelConfig, TransformerBlockConfig
 from cs336_basics.layers.transformer_block import TransformerBlock
 from cs336_basics.layers.embedding import StanfordEmbedding
 from cs336_basics.layers.rmsnorm import StanfordRMSNorm

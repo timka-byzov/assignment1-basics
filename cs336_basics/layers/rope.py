@@ -4,7 +4,7 @@ import torch
 from jaxtyping import Float, Int
 from typing import cast
 
-from cs336_basics.models import RoPEConfig
+from cs336_basics.config.models import RoPEConfig
 
 
 class StanfordRoPE(torch.nn.Module):

@@ -9,7 +9,7 @@ import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
 
-from cs336_basics.models import (
+from cs336_basics.config.models import (
     GLUConfig,
     LLModelConfig,
     MHSAConfig,

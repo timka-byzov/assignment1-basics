@@ -1,6 +1,6 @@
 import torch
 
-from cs336_basics.models import LLModelConfig
+from cs336_basics.config.models import LLModelConfig
 
 
 class StanfordRMSNorm(torch.nn.Module):

@@ -3,7 +3,7 @@ from jaxtyping import Float
 
 from cs336_basics.layers.multihead_self_attention import StanfordMHSA
 from cs336_basics.layers.positionwise_feedforward import StanfordSwiGLU
-from cs336_basics.models import LLModelConfig, TransformerBlockConfig
+from cs336_basics.config.models import LLModelConfig, TransformerBlockConfig
 from cs336_basics.layers.rmsnorm import StanfordRMSNorm
 
 

@@ -3,8 +3,8 @@ from jaxtyping import Float
 from typing import cast
 
 from cs336_basics.layers.rope import StanfordRoPE
-from cs336_basics.models import LLModelConfig, MHSAConfig
-from cs336_basics.utils import create_linear_W
+from cs336_basics.config.models import LLModelConfig, MHSAConfig
+from cs336_basics.utils.tensor_init import create_linear_W
 from cs336_basics.layers.scaled_dot_product_attention import StanfordSDPA
 
 

@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from cs336_basics.utils import create_linear_W
+from cs336_basics.utils.tensor_init import create_linear_W
 
 
 class StanofordLinear(torch.nn.Module):
