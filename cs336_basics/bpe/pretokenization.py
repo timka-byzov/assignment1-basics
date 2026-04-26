@@ -1,5 +1,5 @@
 import os
-from typing import BinaryIO
+from typing import BinaryIO, Iterable
 import regex as re
 
 PAT_RE = re.compile(
@@ -100,20 +100,16 @@ def _split_text_by_spec_tokens(text: str, spec_tokens: list):
     return _split_text_by_spec_tokens_rec(text, sorted_spec_tokens, 0)
 
 
-def _pretokenize_chunk(chunk: str, spec_tokens: list[str]) -> list[str]:
-    pretokenized_chunk: list[str] = []
+def _pretokenize_chunk(chunk: str, spec_tokens: list[str]) -> Iterable[str]:
     for part in _split_text_by_spec_tokens(chunk, spec_tokens):
-        words = PAT_RE.findall(part)
-        pretokenized_chunk.extend(words)
-    return pretokenized_chunk
+        for match in PAT_RE.finditer(part):
+            yield match.group()
 
 
 def pretokenize_text(
     f: BinaryIO, spec_tokens: list[str], num_processes: int
-) -> list[str]:
+) -> Iterable[str]:
     boundaries = _find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
-
-    pretokenized_text: list[str] = []
 
     # The following is a serial implementation, but you can parallelize this
     # by sending each start/end pair to a set of processes.
@@ -122,6 +118,5 @@ def pretokenize_text(
 
         chunk = f.read(end - start).decode("utf-8", errors="ignore")
 
-        pretokenized_text.extend(_pretokenize_chunk(chunk, spec_tokens))
-
-    return pretokenized_text
+        for word in _pretokenize_chunk(chunk, spec_tokens):
+            yield word

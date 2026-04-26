@@ -15,7 +15,7 @@ class BPE:
         with open(file_path, "rb") as f:
             pretokenized_text = pretokenize_text(f, spec_tokens, num_processes)
             byte_dict, merges = train(
-                convert_text_to_bytewords(pretokenized_text),
+                list(convert_text_to_bytewords(pretokenized_text)),
                 [bytes(token, encoding="utf-8") for token in spec_tokens],
                 vocab_size,
             )
