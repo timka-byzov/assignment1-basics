@@ -1,18 +1,18 @@
 import torch
 from jaxtyping import Int, Float
 
-from cs336_basics.layers.linear import StanofordLinear
+from cs336_basics.layers.linear import Linear
 from cs336_basics.config.models import LLModelConfig, TransformerBlockConfig
 from cs336_basics.layers.transformer_block import TransformerBlock
-from cs336_basics.layers.embedding import StanfordEmbedding
-from cs336_basics.layers.rmsnorm import StanfordRMSNorm
+from cs336_basics.layers.embedding import Embedding
+from cs336_basics.layers.rmsnorm import RMSNorm
 
 
-class StanfordLM(torch.nn.Module):
+class LM(torch.nn.Module):
     def __init__(self, block: TransformerBlockConfig, llm: LLModelConfig):
         super().__init__()
 
-        self.embedding = StanfordEmbedding(
+        self.embedding = Embedding(
             num_embeddings=int(llm.vocab_size), embedding_dim=llm.d_model
         )
         self.layers = torch.nn.ModuleList(
@@ -23,8 +23,8 @@ class StanfordLM(torch.nn.Module):
                 for _ in range(llm.num_layers)
             ]
         )
-        self.ln_final = StanfordRMSNorm(block.rms.eps, llm.d_model)
-        self.lm_head = StanofordLinear(llm.d_model, llm.vocab_size)
+        self.ln_final = RMSNorm(block.rms.eps, llm.d_model)
+        self.lm_head = Linear(llm.d_model, llm.vocab_size)
         self.config = llm
 
     def forward(

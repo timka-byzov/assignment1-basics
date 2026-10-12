@@ -1,13 +1,13 @@
 import torch
 from jaxtyping import Float, Bool
-from cs336_basics.layers.softmax import StanfordSoftMax
+from cs336_basics.layers.softmax import SoftMax
 
 
-class StanfordSDPA(torch.nn.Module):
+class SDPA(torch.nn.Module):
     def __init__(self):
         super().__init__()
 
-        self.softmax = StanfordSoftMax()
+        self.softmax = SoftMax()
 
     def forward(
         self,

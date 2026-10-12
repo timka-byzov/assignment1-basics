@@ -1,9 +1,8 @@
 import torch
-import numpy as np
 from cs336_basics.utils.tensor_init import create_linear_W
 
 
-class StanofordLinear(torch.nn.Module):
+class Linear(torch.nn.Module):
 
     def __init__(self, in_features, out_features, device=None, dtype=None):
         super().__init__()

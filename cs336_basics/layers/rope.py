@@ -4,10 +4,8 @@ import torch
 from jaxtyping import Float, Int
 from typing import cast
 
-from cs336_basics.config.models import RoPEConfig
 
-
-class StanfordRoPE(torch.nn.Module):
+class RoPE(torch.nn.Module):
     def __init__(self, theta: float, d_k: int, max_seq_len: int, device=None):
         super().__init__()
 

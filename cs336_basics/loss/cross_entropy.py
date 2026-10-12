@@ -1,7 +1,6 @@
 import torch
 from jaxtyping import Float, Int
 
-from cs336_basics.layers.softmax import StanfordSoftMax
 import einops
 
 from cs336_basics.utils.cross_entropy import get_target_log_probs

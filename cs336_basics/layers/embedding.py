@@ -1,7 +1,7 @@
 import torch
 
 
-class StanfordEmbedding(torch.nn.Module):
+class Embedding(torch.nn.Module):
     def __init__(self, num_embeddings, embedding_dim, device=None, dtype=None):
         super().__init__()
         self.device = device or torch.device("cpu")

@@ -1,7 +1,7 @@
 import torch
 
 
-class StanfordSoftMax(torch.nn.Module):
+class SoftMax(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
 

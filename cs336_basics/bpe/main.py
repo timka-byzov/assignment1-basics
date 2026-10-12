@@ -1,4 +1,3 @@
-from pathlib import Path
 from cs336_basics.bpe.pretokenization import pretokenize_text
 from cs336_basics.bpe.train import train
 from cs336_basics.bpe.common import convert_text_to_bytewords, ByteVocab

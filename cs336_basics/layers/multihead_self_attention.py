@@ -2,13 +2,13 @@ import torch
 from jaxtyping import Float
 from typing import cast
 
-from cs336_basics.layers.rope import StanfordRoPE
-from cs336_basics.config.models import LLModelConfig, MHSAConfig
+from cs336_basics.layers.rope import RoPE
+from cs336_basics.config.models import MHSAConfig
 from cs336_basics.utils.tensor_init import create_linear_W
-from cs336_basics.layers.scaled_dot_product_attention import StanfordSDPA
+from cs336_basics.layers.scaled_dot_product_attention import SDPA
 
 
-class StanfordMHSA(torch.nn.Module):
+class MHSA(torch.nn.Module):
     def __init__(self, mhsa: MHSAConfig, d_model: int, max_seq_len: int):
         super().__init__()
 
@@ -20,13 +20,13 @@ class StanfordMHSA(torch.nn.Module):
         self.num_heads = mhsa.num_heads
 
         if mhsa.rope_config:
-            self.rope = StanfordRoPE(
+            self.rope = RoPE(
                 mhsa.rope_config.theta, d_model // mhsa.num_heads, max_seq_len
             )
         else:
             self.rope = None
 
-        self.sdpa = StanfordSDPA()
+        self.sdpa = SDPA()
 
         self.W_out: Float[torch.Tensor, "d_model d_model"] = torch.nn.Parameter(
             create_linear_W(d_model, d_model)

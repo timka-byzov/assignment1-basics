@@ -38,9 +38,9 @@ def run_linear(
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
 
-    from cs336_basics.layers.linear import StanofordLinear
+    from cs336_basics.layers.linear import Linear
 
-    linear = StanofordLinear(d_in, d_out, "cpu")
+    linear = Linear(d_in, d_out, "cpu")
     linear.load_state_dict({"W": weights})
 
     return linear.forward(in_features)
@@ -65,9 +65,9 @@ def run_embedding(
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
 
-    from cs336_basics.layers.embedding import StanfordEmbedding
+    from cs336_basics.layers.embedding import Embedding
 
-    embedding = StanfordEmbedding(vocab_size, d_model)
+    embedding = Embedding(vocab_size, d_model)
 
     embedding.load_state_dict({"E": weights})
 
@@ -104,9 +104,9 @@ def run_swiglu(
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
 
-    from cs336_basics.layers.positionwise_feedforward import StanfordSwiGLU
+    from cs336_basics.layers.positionwise_feedforward import SwiGLU
 
-    swiglu = StanfordSwiGLU(d_model, d_ff)
+    swiglu = SwiGLU(d_model, d_ff)
 
     swiglu.load_state_dict({"W1": w1_weight, "W2": w2_weight, "W3": w3_weight})
 
@@ -131,9 +131,9 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    from cs336_basics.layers.scaled_dot_product_attention import StanfordSDPA
+    from cs336_basics.layers.scaled_dot_product_attention import SDPA
 
-    return StanfordSDPA().forward(Q, K, V, mask)
+    return SDPA().forward(Q, K, V, mask)
 
 
 def run_multihead_self_attention(
@@ -167,9 +167,9 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_model"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    from cs336_basics.layers.multihead_self_attention import StanfordMHSA
+    from cs336_basics.layers.multihead_self_attention import MHSA
 
-    mhsa = StanfordMHSA(
+    mhsa = MHSA(
         MHSAConfig(num_heads=num_heads),
         d_model=d_model,
         max_seq_len=in_features.shape[-2],
@@ -225,10 +225,9 @@ def run_multihead_self_attention_with_rope(
         implementation with the given QKV projection weights and input features.
     """
 
-    from cs336_basics.layers.multihead_self_attention import StanfordMHSA
-    from cs336_basics.layers.rope import StanfordRoPE
+    from cs336_basics.layers.multihead_self_attention import MHSA
 
-    mhsa = StanfordMHSA(
+    mhsa = MHSA(
         MHSAConfig(
             num_heads=num_heads,
             rope_config=RoPEConfig(theta=theta),
@@ -268,9 +267,9 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    from cs336_basics.layers.rope import StanfordRoPE
+    from cs336_basics.layers.rope import RoPE
 
-    rope = StanfordRoPE(theta, d_k, max_seq_len)
+    rope = RoPE(theta, d_k, max_seq_len)
     return rope.forward(in_query_or_key, token_positions)
 
 
@@ -458,7 +457,7 @@ def run_transformer_lm(
         next-word distribution for each token.
     """
 
-    from cs336_basics.layers.lm import StanfordLM
+    from cs336_basics.layers.lm import LM
 
     transformer_block_config = TransformerBlockConfig(
         mhsa=MHSAConfig(
@@ -476,7 +475,7 @@ def run_transformer_lm(
         vocab_size=vocab_size,
     )
 
-    lm = StanfordLM(transformer_block_config, llm_config)
+    lm = LM(transformer_block_config, llm_config)
 
     state_dict: dict[str, Tensor] = {
         "embedding.E": weights["token_embeddings.weight"],
@@ -521,9 +520,9 @@ def run_rmsnorm(
         RMSNorm of the `in_features`.
     """
 
-    from cs336_basics.layers.rmsnorm import StanfordRMSNorm
+    from cs336_basics.layers.rmsnorm import RMSNorm
 
-    norm = StanfordRMSNorm(eps, d_model)
+    norm = RMSNorm(eps, d_model)
     norm.load_state_dict({"g": weights})
     return norm.forward(in_features)
 
@@ -578,9 +577,9 @@ def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, "
         Float[Tensor, "..."]: Tensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-    from cs336_basics.layers.softmax import StanfordSoftMax
+    from cs336_basics.layers.softmax import SoftMax
 
-    return StanfordSoftMax().forward(in_features, dim)
+    return SoftMax().forward(in_features, dim)
 
 
 def run_cross_entropy(

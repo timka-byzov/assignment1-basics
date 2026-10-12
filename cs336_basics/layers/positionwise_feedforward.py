@@ -1,7 +1,7 @@
 import torch
 
 
-class StanfordSwiGLU(torch.nn.Module):
+class SwiGLU(torch.nn.Module):
     def __init__(self, d_model: int, d_ff: int | None, device=None) -> None:
         super().__init__()
 
