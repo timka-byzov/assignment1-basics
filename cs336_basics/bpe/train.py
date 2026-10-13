@@ -149,9 +149,9 @@ def _build_init_counter(
     pretokenized_text: Iterable[ByteWord],
 ) -> FrequencyCounter:
     counter = FrequencyCounter()
-    for word_tokens in pretokenized_text:
-        for i in range(len(word_tokens) - 1):
-            curr_pair = word_tokens[i], word_tokens[i + 1]
+    for word_bytes in pretokenized_text:
+        for i in range(len(word_bytes) - 1):
+            curr_pair = word_bytes[i], word_bytes[i + 1]
             counter.add(curr_pair)
     return counter
 
@@ -174,9 +174,7 @@ def train(
     assert vocab_size >= len(spec_tokens) + UTF_8_BYTES
 
     train_text = [TrainWord(word) for word in pretokenized_text]
-
     byte_vocab = _build_initial_dict(spec_tokens)
-
     counter = _build_init_counter(pretokenized_text)
     merges: list[BytePair] = []
 

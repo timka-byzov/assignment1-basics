@@ -751,13 +751,13 @@ def run_train_bpe(
                 Merges are ordered by order of creation.
     """
 
-    from cs336_basics.bpe.main import BPE
+    from cs336_basics.bpe.pretokenization import PreTokenizer
+    from cs336_basics.bpe.tokenizer import BPE
 
-    bpe = BPE()
-    byte_dict, merges = bpe.fit(
+    bpe = BPE(PreTokenizer(spec_tokens=special_tokens))
+    merges = bpe.fit(
         str(input_path),
-        special_tokens,
         vocab_size,
     )
 
-    return byte_dict, merges
+    return bpe.byte_dict, merges
