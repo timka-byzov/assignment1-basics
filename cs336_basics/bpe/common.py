@@ -1,16 +1,17 @@
+from collections.abc import Iterable
+
 type ByteWord = tuple[bytes, ...]
 type BytePair = tuple[bytes, bytes]
 type FrequencyTable = dict[BytePair, int]
 type ByteVocab = dict[int, bytes]
 
-from typing import Iterable
 
 UTF_8_BYTES = 256
 
 
 def convert_text_to_bytewords(text: Iterable[str]) -> Iterable[ByteWord]:
     for word in text:
-        yield tuple(map(lambda char: bytes(char, encoding="utf-8"), word))
+        yield tuple(bytes([byte]) for byte in word.encode("utf-8"))
 
 
 def reverse_bytes(text: bytes) -> bytes:

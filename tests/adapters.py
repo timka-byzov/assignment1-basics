@@ -760,4 +760,4 @@ def run_train_bpe(
         vocab_size,
     )
 
-    return bpe.byte_dict, merges
+    return bpe.byte_vocab, merges

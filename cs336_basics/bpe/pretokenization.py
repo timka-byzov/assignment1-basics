@@ -29,7 +29,7 @@ class PreTokenizer(PreTokenizerBase):
     def __init__(
         self, spec_tokens: list[str], split_spec_token: bytes = b"<|endoftext|>", num_processes: int = 1
     ) -> None:
-        self.sorted_spec_tokens = list(sorted(spec_tokens, key=len, reverse=True))
+        self.sorted_spec_tokens: list[str] = sorted(spec_tokens, key=lambda token: len(token), reverse=True)
         self.num_processes = num_processes
         assert isinstance(split_spec_token, bytes), "Must represent special token as a bytestring"
         self.split_spec_token = split_spec_token
@@ -48,7 +48,7 @@ class PreTokenizer(PreTokenizerBase):
         file_size = file.tell()
         file.seek(0)
 
-        desired_num_chunks = (file_size + self.num_processes - 1) // self.num_processes
+        desired_num_chunks = self.num_processes
         chunk_size = file_size // desired_num_chunks
 
         # Initial guesses for chunk boundary locations, uniformly spaced
